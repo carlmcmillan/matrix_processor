@@ -2,12 +2,31 @@ class OperationError(Exception):
     pass
 
 
+def sub_matrix(orig_matrix, i_exclude, j_exclude):
+    matrix = []
+    for i in range(len(orig_matrix)):
+        if i != i_exclude:
+            matrix.append(orig_matrix[i][:j_exclude] + orig_matrix[i][j_exclude + 1:])
+    return matrix
+
+
+def calc_determinant(matrix):
+    if len(matrix) == 1:
+        return matrix[0][0]
+    elif len(matrix) == 2:
+        return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
+    for j in range(len(matrix[0])):
+        return sum([matrix[0][j] * calc_determinant(sub_matrix(matrix, 0, j)) * (-1)**j
+                for j in range(len(matrix[0]))])
+
+
 while True:
     print("1. Add matrices")
     print("2. Multiply matrix by a constant")
     print("3. Multiply matrices")
     print("4. Transpose matrix")
     print("5. Calculate a determinant")
+    print("6. Inverse matrix")
     print("0. Exit")
     menu_opt = input("Your choice: ")
 
@@ -137,26 +156,36 @@ while True:
                 if len(row) != m_a:
                     raise OperationError
                 A.append(row)
-
-            def sub_matrix(orig_matrix, i_exclude, j_exclude):
-                matrix = []
-                for i in range(len(orig_matrix)):
-                    if i != i_exclude:
-                        matrix.append(orig_matrix[i][:j_exclude] + orig_matrix[i][j_exclude + 1:])
-                return matrix
-
-            def calc_determinant(matrix):
-                if len(matrix) == 1:
-                    return matrix[0][0]
-                elif len(matrix) == 2:
-                    return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
-                for j in range(len(matrix[0])):
-                    return sum([matrix[0][j] * calc_determinant(sub_matrix(matrix, 0, j)) * (-1)**j
-                            for j in range(len(matrix[0]))])
-
             det = calc_determinant(A)
             print("The result is:")
             print(det)
+
+        if menu_opt == "6":
+            (n_a, m_a) = map(int, input("Enter matrix size: ").split())
+            print("Enter matrix:")
+            A = []
+            for _ in range(n_a):
+                row = list(map(float, input().split()))
+                if len(row) != m_a:
+                    raise OperationError
+                A.append(row)
+            C = [[0 for y in range(m_a)] for x in range(n_a)]
+            for i in range(n_a):
+                for j in range(m_a):
+                    C[i][j] = calc_determinant(sub_matrix(A, i, j)) * (-1)**(i+j)
+            C_transpose = [[0 for y in range(m_a)] for x in range(n_a)]
+            for i in range(n_a):
+                for j in range(m_a):
+                    C_transpose[i][j] = C[j][i]
+            det_A = calc_determinant(A)
+            A_inv = []
+            for i in range(n_a):
+                A_inv.append([])
+                for j in range(m_a):
+                    A_inv[i].append((1 / det_A) * C_transpose[i][j])
+            print("The result is:")
+            for i in range(n_a):
+                print(" ".join(list(map(str, A_inv[i]))))
 
     except OperationError:
         print("The operation cannot be performed.")
